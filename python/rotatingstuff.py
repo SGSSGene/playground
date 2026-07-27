@@ -11,10 +11,10 @@ from PIL import Image
 import numpy as np
 
 # Configuration
-WINDOW_SIZE = (800, 600)
+WINDOW_SIZE = (1600, 1200)
 BG_COLOR = (30, 30, 30)
 ROTATION_SPEED = 90  # degrees per second
-MAX_IMAGE_SIZE = 400  # maximum width/height to scale the image to
+MAX_IMAGE_SIZE = 800  # maximum width/height to scale the image to
 
 
 def load_image(path):
@@ -88,30 +88,40 @@ def pil_to_surface(pil_image):
 def main():
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Rotating Square")
+    pygame.display.set_caption("Rotating Image")
     clock = pygame.time.Clock()
 
     image_path = sys.argv[1] if len(sys.argv) > 1 else "imgs/truck.png"
 
    #use an image from an image source or use a self-generated image.
-    image = load_image(image_path)
-    #image = pil_to_surface(generate_mandelbrot_img())
+    #image = load_image(image_path)
+    image = pil_to_surface(generate_mandelbrot_img())
 
     angle = 0.0
     running = True
+    direction = -1
+    i = 0
     while running:
         dt = clock.tick(60) / 1000.0  # seconds elapsed since last frame
+        i = i + 1
+        if i % 100 == 0:
+            print (i)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                direction = -1
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                direction = 1
 
-        angle = (angle + ROTATION_SPEED * dt) % 360
+
+        angle = (angle + direction*ROTATION_SPEED * dt) % 360
 
         # rotozoom is often better quality than rotate; negative angle for clockwise
-        rotated = pygame.transform.rotozoom(image, -angle, 1.0)
+        rotated = pygame.transform.rotozoom(image, -angle, np.cos(angle*2*np.pi/360)*0.4+0.5)
         rotated_rect = rotated.get_rect(center=(WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2))
 
         screen.fill(BG_COLOR)
