@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 This is a manual mountain car(t) with physics, exit by pressing ESC
+Created 2026 by Daniel Goehring
 """
 import math
 import sys
@@ -12,10 +13,8 @@ BG_COLOR = (30, 30, 30)
 MAX_IMAGE_SIZE = 1024  # maximum width/height to scale the image to
 HORIZONTAL_SCALE_FACTOR = 0.007
 
-
 def mountain_height_and_derivative(x):
     return 256 * math.cos(HORIZONTAL_SCALE_FACTOR*x) + 256, -256 * math.sin(HORIZONTAL_SCALE_FACTOR*x)
-
 
 def update_state(p, v, action, steps):
     #this calculates the height and ascent on the mountain
@@ -72,7 +71,7 @@ def agent_request(p,v,steps):
 def main():
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Mountain Cart")
+    pygame.display.set_caption("Daniel's Mountain Car(t)")
     clock = pygame.time.Clock()
 
     running = True
