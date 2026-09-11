@@ -14,14 +14,14 @@ WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 1024
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 BG_COLOR = (30, 30, 30)# maximum width/height to scale the image to
-MAX_ABS_ACCELERATION = 0.6
+MAX_ABS_ACCELERATION = 0.75
 MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
-MAX_EPISODES = 1000
-INSANE_SPEED = True
+MAX_EPISODES = 2000
+MAX_FPS = True
 RENDER = False
-VERBOSE = False
+VERBOSE = True
 
 def mountain_height_and_derivative(x):
     return MOUNTAIN_HEIGHT * math.cos(HORIZONTAL_SCALE_FACTOR*x), -MOUNTAIN_HEIGHT * math.sin(HORIZONTAL_SCALE_FACTOR*x)
@@ -44,11 +44,12 @@ def update_state(p, v, action, steps):
     v = v*0.995
 
     #position update
-    p = p + v/10
+    p = p + v/5
 
     if p > WINDOW_WIDTH:
         reward = 100
-        print("SUCCESS, required steps: ", steps, " resetting 01")
+        if VERBOSE:
+            print("SUCCESS, required steps: ", steps, " resetting 01")
 
         p = math.pi / HORIZONTAL_SCALE_FACTOR  #start at center
         v = 0 #positive reward
@@ -66,7 +67,8 @@ def update_state(p, v, action, steps):
 
     else:
         if steps > MAX_STEPS_PER_EPISODE:
-            print("TOO MANY STEPS, ", steps, "  resetting 03")
+            if VERBOSE:
+                print("TOO MANY STEPS, ", steps, "  resetting 03")
             p = math.pi / HORIZONTAL_SCALE_FACTOR
             v = 0
             steps = 0
@@ -120,8 +122,8 @@ def main():
     steps = 0
     while running:
         #SWITCH THIS ONE OFF FOR FAST SIMULATION or ON for real physics
-        if not INSANE_SPEED:
-            clock.tick(100)  # fps
+        if not MAX_FPS:
+            clock.tick(50)  # fps
         steps = steps + 1
 
         if VERBOSE:
@@ -144,7 +146,8 @@ def main():
 
         if trunc_or_term !=0:
             episodes += 1
-            print("Episode: ", episodes, " FINISHED ")
+            if VERBOSE:
+                print("Episode: ", episodes, " FINISHED ")
 
         if episodes >= MAX_EPISODES:
             running = False
