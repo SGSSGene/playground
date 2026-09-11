@@ -73,7 +73,7 @@ def update_state(p, v, action, steps):
 
     else:
         reward = -1
-    
+
     # needs to add value
     return p, v, steps, reward
 
@@ -101,15 +101,14 @@ def main():
     #start velocity
     v = 0
 
+    #episodes = 0
     i = 0
     while running:
-        #this is to slow the simulation down
+        #SWITCH THIS ONE OF FOR FAST SIMULATION
         dt = clock.tick(100) / 1000.0  # seconds elapsed since last frame
         i = i + 1
         if i % 100 == 0:
             print (i)
-
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
