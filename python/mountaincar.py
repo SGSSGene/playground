@@ -15,26 +15,8 @@ HORIZONTAL_SCALE_FACTOR = 0.007
 
 
 def mountain_height_and_derivative(x):
-
-
     return 256 * math.cos(HORIZONTAL_SCALE_FACTOR*x) + 256, -256 * math.sin(HORIZONTAL_SCALE_FACTOR*x)
 
-def pil_to_surface(pil_image):
-    # Ensure mode is RGB or RGBA
-    if pil_image.mode not in ("RGB", "RGBA"):
-        pil_image = pil_image.convert("RGBA")
-
-    mode = pil_image.mode
-    size = pil_image.size
-    data = pil_image.tobytes()  # raw bytes
-
-    # Use fromstring and then convert to display format
-    if mode == "RGBA":
-        surf = pygame.image.fromstring(data, size, "RGBA")
-        return surf.convert_alpha()
-    else:  # mode == "RGB"
-        surf = pygame.image.fromstring(data, size, "RGB")
-        return surf.convert()
 
 def update_state(p, v, action, steps):
     #print("before", p, v)
@@ -105,7 +87,7 @@ def main():
     i = 0
     while running:
         #SWITCH THIS ONE OF FOR FAST SIMULATION
-        dt = clock.tick(100) / 1000.0  # seconds elapsed since last frame
+     #   dt = clock.tick(100) / 1000.0  # seconds elapsed since last frame
         i = i + 1
         if i % 100 == 0:
             print (i)
