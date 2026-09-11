@@ -1,3 +1,14 @@
+/**********************
+*
+*This is a manual mountain car(t) with physics, no visuals, no keyboard
+*Created 2026 by Daniel Goehring
+*Comes with a precoded policy, no learning algorithm implemented yet
+*Todo: Non-deterministic physics, e.g., gaussian, multi agents
+*
+*
+***********************/
+
+
 #include <iostream>
 #include <cmath>
 
@@ -160,9 +171,5 @@ int main()
 	
 	}
 
-
-
-
-	std::cout << "Hello World\n"; // Ausgabe eines Textes
 	return 0;
 }
