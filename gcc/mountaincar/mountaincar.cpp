@@ -45,20 +45,14 @@ void update_state() {
     reward = 0;
 	
     //action leads to increased / decreased velocity
-    if (action == 1) {
-        v = v + MAX_ABS_ACCELERATION;
-	}
-
-    if (action == -1) {
-        v = v - MAX_ABS_ACCELERATION;
-	}
+    v = v + action * MAX_ABS_ACCELERATION;
 
 
     //velocity update by gravitational force
     v = v - sin(atan(d));
 
     //velocity update with viscous friction force
-    v = v*0.995;
+    v = v * 0.995;
 
     //position update
     p = p + v/5;
@@ -103,25 +97,15 @@ void update_state() {
 
 void agent_request() {
 
-    //possible policy:
+    //BASELINE policy:
     double d = mountain_derivative(p);
 
-    if (d > 0) {
-        if (v >= -1) {
-            action = 1;
-		}
-        else {
-            action = -1;
-		}
-	}
+    if (v >= -1) {
+        action = 1;
+    }
     else {
-        if (v >= -1) {
-            action = 1;
-		}
-        else {
-            action = -1;
-		}
-	}
+        action = -1;
+    }
     //
     //here comes the state transition model, simple physics
     update_state();
@@ -130,10 +114,7 @@ void agent_request() {
 }
 
 
-
-
-int main() 
-{
+int main() {
 	running = true;
 
     //start position
