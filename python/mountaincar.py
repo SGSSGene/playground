@@ -19,8 +19,8 @@ MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
 MAX_EPISODES = 2000
-MAX_FPS = True
-RENDER = False
+MAX_FPS = False
+RENDER = True
 VERBOSE = True
 
 def mountain_height_and_derivative(x):
@@ -32,10 +32,7 @@ def update_state(p, v, action, steps):
     y, d = mountain_height_and_derivative(p)
 
     # action leads to increased / decreased velocity
-    if action == 1:
-        v = v + MAX_ABS_ACCELERATION
-    if action == -1:
-        v = v - MAX_ABS_ACCELERATION
+    v = v + action * MAX_ABS_ACCELERATION
 
     #velocity update by gravitational force
     v = v - math.sin(math.atan(d))
@@ -85,17 +82,12 @@ def agent_request(p,v,steps):
     action = 0  #the agent does nothing yet, neither does it learn anything
     #-1 left
     # 1 right
-    ##possible policy:
+
+    ##BASELINE policy:
     h, d = mountain_height_and_derivative(p)
-    if d > 0:
-        if v >= -1:
+    if v >= -1:
             action = 1
-        else:
-            action = -1
     else:
-        if v >= -1:
-            action = 1
-        else:
             action = -1
 
     ##
