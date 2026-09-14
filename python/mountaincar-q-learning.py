@@ -21,11 +21,12 @@ MAX_ABS_ACCELERATION = 0.75
 MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
-MAX_EPISODES = 100
+MAX_EPISODES = 500
 MAX_FPS = True
 RENDER = True
 RENDER_EVERY_NTH_EPISODE = 10
 VERBOSE = True
+RANDOM_RESET = True
 
 # Learning Configuration
 MIN_POSITION = 0
@@ -37,7 +38,6 @@ NUM_OF_VELOCITY_BUCKETS = 8
 
 NUM_STATES = NUM_OF_POSITION_BUCKETS * NUM_OF_VELOCITY_BUCKETS  # 36 states for a 6x6 map
 NUM_ACTIONS = 2  # 4 actions
-q_table = np.zeros((NUM_STATES, NUM_ACTIONS))
 
 # Learning parameters
 ALPHA = 0.8  # Learning rate
@@ -45,7 +45,20 @@ GAMMA = 0.99  # Discount factor
 EPSILON = 0.0  # Exploration rate
 #EPSILON_DECAY = 0.99
 
+q_table = np.zeros((NUM_STATES, NUM_ACTIONS))
 
+
+
+def reset_state():
+    if RANDOM_RESET:
+        rand_p = np.random.rand()
+        p = (.5*rand_p + .25) * (MAX_POSITION - MIN_POSITION) + MIN_POSITION
+        rand_v = np.random.rand()
+        v = (.5*rand_v + .25) * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
+    else:
+        p = math.pi / HORIZONTAL_SCALE_FACTOR
+        v = 0
+    return p, v
 
 def mountain_height_and_derivative(x):
     return MOUNTAIN_HEIGHT * math.cos(HORIZONTAL_SCALE_FACTOR*x), -MOUNTAIN_HEIGHT * math.sin(HORIZONTAL_SCALE_FACTOR*x)
@@ -71,17 +84,21 @@ def update_state(p, v, action, steps):
         if VERBOSE:
             print("SUCCESS, required steps: ", steps, " resetting 01")
 
-        p = math.pi / HORIZONTAL_SCALE_FACTOR  #start at center
-        v = 0 #positive reward
+        p, v = reset_state()  #start at center
+         #positive reward
         steps = 0
         trunc_or_term = 1
 
 
     elif p <= 0:
-        reward = -1*steps  #*math.log10(steps+2)
-        p = 0
-        v = 0
-        trunc_or_term = 0
+        reward = -10000
+        if VERBOSE:
+            print("CRASHED LEFT, required steps: ", steps, " resetting 02")
+
+        p, v = reset_state()  # start at center
+        # positive reward
+        steps = 0
+        trunc_or_term = 2
 
     else:
         reward = -1*steps
@@ -89,8 +106,7 @@ def update_state(p, v, action, steps):
         if steps > MAX_STEPS_PER_EPISODE:
             if VERBOSE:
                 print("TOO MANY STEPS, ", steps, "  resetting 03")
-            p = math.pi / HORIZONTAL_SCALE_FACTOR
-            v = 0
+            p, v = reset_state()
             steps = 0
             trunc_or_term = 2
 
@@ -181,10 +197,7 @@ def main():
     running = True
 
     #start position
-    p = math.pi / HORIZONTAL_SCALE_FACTOR #start at the valley
-
-    #start velocity
-    v = 0
+    p, v = reset_state()
 
     episodes = 0
     steps = 0
@@ -242,7 +255,7 @@ def main():
                     value_left = q_table[(pos_and_vel_to_state(x, y)),0]
                     value_right = q_table[(pos_and_vel_to_state(x, y)),1]
 
-                    color_scale = 0.01
+                    color_scale = 0.001
 
                     col_left = 128 + value_left*color_scale
                     col_right = 128 + value_right*color_scale
