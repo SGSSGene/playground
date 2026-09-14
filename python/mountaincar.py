@@ -84,7 +84,6 @@ def agent_request(p,v,steps):
     # 1 right
 
     ##BASELINE policy:
-    h, d = mountain_height_and_derivative(p)
     if v >= -1:
             action = 1
     else:
