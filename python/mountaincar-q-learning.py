@@ -7,7 +7,11 @@ Todo: Non-deterministic physics, e.g., gaussian, multi agents
 """
 import math
 import sys
+from math import floor
+
+import numpy as np
 import pygame
+import matplotlib.pyplot as plt
 
 # Configuration
 WINDOW_WIDTH = 1024
@@ -18,10 +22,29 @@ MAX_ABS_ACCELERATION = 0.75
 MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
-MAX_EPISODES = 2000
-MAX_FPS = False
+MAX_EPISODES = 100
+MAX_FPS = True
 RENDER = True
 VERBOSE = True
+
+# Learning Configuration
+MIN_POSITION = 0
+MAX_POSITION = WINDOW_WIDTH
+MIN_VELOCITY = -128
+MAX_VELOCITY = 128
+NUM_OF_POSITION_BUCKETS = 8
+NUM_OF_VELOCITY_BUCKETS = 8
+
+NUM_STATES = NUM_OF_POSITION_BUCKETS * NUM_OF_VELOCITY_BUCKETS  # 36 states for a 6x6 map
+NUM_ACTIONS = 2  # 4 actions
+q_table = np.zeros((NUM_STATES, NUM_ACTIONS))
+
+# Learning parameters
+ALPHA = 0.5  # Learning rate
+GAMMA = 0.99  # Discount factor
+EPSILON = 0.0  # Exploration rate - no decay
+
+
 
 def mountain_height_and_derivative(x):
     return MOUNTAIN_HEIGHT * math.cos(HORIZONTAL_SCALE_FACTOR*x), -MOUNTAIN_HEIGHT * math.sin(HORIZONTAL_SCALE_FACTOR*x)
@@ -55,14 +78,14 @@ def update_state(p, v, action, steps):
 
 
     elif p <= 0:
-        reward = -1 #-100
-        #print("FELL OF LEFT CLIFF, required steps: ", steps, " resetting 02")
-        p = 0#math.pi / HORIZONTAL_SCALE_FACTOR
-        v = 0 #negative reward
-        #steps = 0
-        trunc_or_term = 0#1
+        reward = -1*steps
+        p = 0
+        v = 0
+        trunc_or_term = 0
 
     else:
+        reward = -1*steps
+        trunc_or_term = 0
         if steps > MAX_STEPS_PER_EPISODE:
             if VERBOSE:
                 print("TOO MANY STEPS, ", steps, "  resetting 03")
@@ -70,31 +93,85 @@ def update_state(p, v, action, steps):
             v = 0
             steps = 0
             trunc_or_term = 2
-        reward = -1
-
-
 
     # needs to add value
     return p, v, steps, reward, trunc_or_term
 
-def agent_request(p,v,steps):
+def discretize_pos_and_vel(p,v):
+    #clip to boundaries
+    if p < MIN_POSITION:
+        p = MIN_POSITION
+    if p >= MAX_POSITION-1:
+        p = MAX_POSITION-1
+    if v < MIN_VELOCITY:
+        v = MIN_VELOCITY
+    if v >= MAX_VELOCITY-1:
+        v = MAX_VELOCITY-1
 
+    disc_p = floor((p-MIN_POSITION) / ((MAX_POSITION - MIN_POSITION) / NUM_OF_POSITION_BUCKETS))
+    disc_v = floor((v-MIN_VELOCITY) / ((MAX_VELOCITY - MIN_VELOCITY) / NUM_OF_VELOCITY_BUCKETS))
+
+    return disc_p, disc_v
+
+def pos_and_vel_to_state(disc_p, disc_v):
+    return disc_p*NUM_OF_POSITION_BUCKETS+disc_v
+
+
+def agent_request(p,v,steps):
     action = 0  #the agent does nothing yet, neither does it learn anything
     #-1 left
     # 1 right
 
-    ##BASELINE policy:
-    h, d = mountain_height_and_derivative(p)
-    if v >= -1:
+    #...
+    #print("100: p ", p, " v ", v, " steps ", steps)
+
+    disc_p, disc_v = discretize_pos_and_vel(p, v)
+    state = pos_and_vel_to_state(disc_p, disc_v)
+
+   # print("Step ", steps, " disc_p ", disc_p, " disc_v ", disc_v, " state ", state, " leftVal ", q_table[state, 0], " rightVal ", q_table[state, 1])
+
+    if np.random.rand() < EPSILON:
+    # Explore: random action
+        print("Should not be here")
+        if np.random.rand() < 0.5:
+            action = -1
+        else:
             action = 1
     else:
+        #Finishing the best action (only two actions possible)
+        if  q_table[state, 0] > q_table[state, 1]:
+            #print("Went left")
             action = -1
+        elif q_table[state, 0] < q_table[state, 1]:
+            #print("Went right")
+            action = 1
+        #Both actions have similar value
+        else:
+            if np.random.rand() < 0.5:
+             #   print("Random left")
+                action = -1
+            else:
+              #  print("Random right")
+                action = 1
+    #Now execute action
+    new_p, new_v, steps, reward, trunc_or_term = update_state(p, v, action,steps)
+    new_disc_p, new_disc_v = discretize_pos_and_vel(new_p, new_v)
 
-    ##
-    #here comes the state transition model, simple physics
-    p, v, steps, reward, trunc_or_term = update_state(p, v, action,steps)
+    new_state = pos_and_vel_to_state(new_disc_p, new_disc_v)
 
-    return p, v, steps, trunc_or_term
+    if q_table[new_state, 0] > q_table[new_state, 1]:
+        best_future_q = q_table[new_state, 0]
+    else:
+        best_future_q = q_table[new_state, 1]
+
+    if action == -1:
+        q_table[state, 0] += ALPHA * (reward + GAMMA * best_future_q - q_table[state, 0])
+
+    if action == 1:
+        q_table[state, 1] += ALPHA * (reward + GAMMA * best_future_q - q_table[state, 1])
+
+
+    return new_p, new_v, steps, trunc_or_term
 
 def main():
     pygame.init()
@@ -116,9 +193,8 @@ def main():
         #SWITCH THIS ONE OFF FOR FAST SIMULATION or ON for real physics
         if not MAX_FPS:
             clock.tick(50)  # fps
-        steps = steps + 1
 
-        if VERBOSE:
+        #if VERBOSE:
             if steps % 100 == 0:
                 print ("Episode: ", episodes, " Step: ", steps)
 
@@ -134,12 +210,17 @@ def main():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 v = v + MAX_ABS_ACCELERATION * 10
                 print("Pressed Right")
+
         p, v, steps, trunc_or_term = agent_request(p, v, steps)
 
         if trunc_or_term !=0:
             episodes += 1
             if VERBOSE:
-                print("Episode: ", episodes, " FINISHED ")
+                if episodes % 10 == 0:
+                     print(f"Episode {episodes}")
+
+            #print(f"Episode {episodes}: Q-Table\n{q_table}")
+
 
         if episodes >= MAX_EPISODES:
             running = False
@@ -150,13 +231,41 @@ def main():
             #draw at first the mountain
             for x in range(1024):
                 height, derivative = mountain_height_and_derivative(x)
-                pygame.draw.circle(screen, (240, 240, 0), (x + 10, WINDOW_SIZE[1]/2 - height), 1)
+                pygame.draw.circle(screen, (240, 240, 0), (x + 10, WINDOW_HEIGHT/2 - height), 1)
 
             #now draw the car
             height, derivative = mountain_height_and_derivative(p)
-            pygame.draw.circle(screen, (240, 240, 240), (p + 10, WINDOW_SIZE[1]/2 - height-12), 10)
+            pygame.draw.circle(screen, (240, 240, 240), (p + 10, WINDOW_HEIGHT/2 - height-12), 10)
+
+            #draw the q-values
+            for x in range(NUM_OF_POSITION_BUCKETS):
+                for y in range (NUM_OF_VELOCITY_BUCKETS):
+                    value_left = q_table[(pos_and_vel_to_state(x, y)),0]
+                    value_right = q_table[(pos_and_vel_to_state(x, y)),1]
+
+#                    print(" p ", x , " v ", y , " value_left  " , value_left, " value_right ", value_right)
+
+                    color_scale = 0.01
+
+                    col_left = 128 + value_left*color_scale
+                    col_right = 128 + value_right*color_scale
+
+                    if col_left < 0:
+                        col_left = 0
+                    if col_right < 0:
+                        col_right = 0
+
+                    if col_left > 255:
+                        col_left = 255
+                    if col_right > 255:
+                        col_right = 255
+
+                    pygame.draw.circle(screen, (col_left, col_left, 255-col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - 5, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), 5)
+                    pygame.draw.circle(screen, (col_right, col_right, 255-col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + 5, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), 5)
+
 
             pygame.display.flip()
+        steps = steps + 1
 
     pygame.quit()
     sys.exit()
