@@ -98,8 +98,6 @@ void update_state() {
 void agent_request() {
 
     //BASELINE policy:
-    double d = mountain_derivative(p);
-
     if (v >= -1) {
         action = 1;
     }
