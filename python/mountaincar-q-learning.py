@@ -33,10 +33,10 @@ MIN_POSITION = 0
 MAX_POSITION = WINDOW_WIDTH
 MIN_VELOCITY = -128
 MAX_VELOCITY = 128
-NUM_OF_POSITION_BUCKETS = 8
-NUM_OF_VELOCITY_BUCKETS = 8
+NUM_OF_POSITION_BUCKETS = 16
+NUM_OF_VELOCITY_BUCKETS = 16
 
-NUM_STATES = NUM_OF_POSITION_BUCKETS * NUM_OF_VELOCITY_BUCKETS  # 36 states for a 6x6 map
+NUM_STATES = NUM_OF_POSITION_BUCKETS * NUM_OF_VELOCITY_BUCKETS
 NUM_ACTIONS = 2  # 4 actions
 
 # Learning parameters
@@ -130,22 +130,23 @@ def discretize_pos_and_vel(p,v):
     return disc_p, disc_v
 
 def pos_and_vel_to_state(disc_p, disc_v):
-    return disc_p*NUM_OF_POSITION_BUCKETS+disc_v
+    return disc_p + disc_v * NUM_OF_POSITION_BUCKETS
 
 
 def agent_request(p,v,steps):
 
     #...
-    #print("100: p ", p, " v ", v, " steps ", steps)
+ #   print("100: p ", p, " v ", v, " steps ", steps)
 
     disc_p, disc_v = discretize_pos_and_vel(p, v)
+ #   print("105: disc_p ", disc_p, " disc_v ", disc_v, " steps ", steps)
     state = pos_and_vel_to_state(disc_p, disc_v)
 
-   # print("Step ", steps, " disc_p ", disc_p, " disc_v ", disc_v, " state ", state, " leftVal ", q_table[state, 0], " rightVal ", q_table[state, 1])
+ #   print("110 state ", state)
+
+
 
     if np.random.rand() < EPSILON:
-    # Explore: random action
-      #  print("Should not be here")
         if np.random.rand() < 0.5:
             action = -1
         else:
@@ -180,10 +181,22 @@ def agent_request(p,v,steps):
     if action == -1:
         q_table[state, 0] += ALPHA * (reward + GAMMA * best_future_q - q_table[state, 0])
 
+
     if action == 1:
         q_table[state, 1] += ALPHA * (reward + GAMMA * best_future_q - q_table[state, 1])
 
-    ##if reward >= 100:
+#    q_table[0, 0] =       0
+#    q_table[1, 0] =       0
+#    q_table[2, 0] = -100000
+#    q_table[3, 0] = -100000
+
+#    q_table[0, 1] = -100000
+#    q_table[1, 1] = -100000
+#    q_table[2, 1] =       0
+#    q_table[3, 1] =       0
+
+
+        ##if reward >= 100:
     ##    print("REWARD 100 , state ", state , " action ", action , " pos ", p , " vel ", v , " disc p ", disc_p , " disc v ", disc_v, " state 0 ", q_table[state, 0], " state 1 ", q_table[state, 1])
 
     return new_p, new_v, steps, trunc_or_term
@@ -255,29 +268,20 @@ def main():
                     value_left = q_table[(pos_and_vel_to_state(x, y)),0]
                     value_right = q_table[(pos_and_vel_to_state(x, y)),1]
 
-                    color_scale = 0.001
 
-                    col_left = 128 + value_left*color_scale
-                    col_right = 128 + value_right*color_scale
 
-                    if col_left < 0:
-                        col_left = 0
-                    if col_right < 0:
-                        col_right = 0
+                    red_scale = (value_left - min(value_left, value_right)) / ((max(value_left, value_right) - min(value_left, value_right)) + 10000) * 255
+                    green_scale = (value_right - min(value_left, value_right)) / ((max(value_left, value_right) - min(value_left, value_right)) + 10000) * 255
 
-                    if col_left > 255:
-                        col_left = 255
-                    if col_right > 255:
-                        col_right = 255
 
-                    pygame.draw.circle(screen, (255-col_left, col_left, col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
-                    pygame.draw.circle(screen, (col_right, 255-col_right, col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
+                    pygame.draw.circle(screen, (red_scale, 0, 0 ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16)
+                    pygame.draw.circle(screen, (0, green_scale, 0 ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16)
 
 
             pygame.display.flip()
 
         steps = steps + 1
-
+    print(f"Episode {episodes}: Q-Table\n{q_table}")
     pygame.quit()
     sys.exit()
 
