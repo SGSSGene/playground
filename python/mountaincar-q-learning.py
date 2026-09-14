@@ -270,8 +270,8 @@ def main():
                     if col_right > 255:
                         col_right = 255
 
-                    pygame.draw.circle(screen, (col_left, col_left, 255-col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
-                    pygame.draw.circle(screen, (col_right, col_right, 255-col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
+                    pygame.draw.circle(screen, (255-col_left, col_left, col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
+                    pygame.draw.circle(screen, (col_right, 255-col_right, col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
 
 
             pygame.display.flip()
