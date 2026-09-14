@@ -11,7 +11,6 @@ from math import floor
 
 import numpy as np
 import pygame
-import matplotlib.pyplot as plt
 
 # Configuration
 WINDOW_WIDTH = 1024
@@ -25,6 +24,7 @@ MAX_STEPS_PER_EPISODE = 1000
 MAX_EPISODES = 100
 MAX_FPS = True
 RENDER = True
+RENDER_EVERY_NTH_EPISODE = 10
 VERBOSE = True
 
 # Learning Configuration
@@ -40,9 +40,10 @@ NUM_ACTIONS = 2  # 4 actions
 q_table = np.zeros((NUM_STATES, NUM_ACTIONS))
 
 # Learning parameters
-ALPHA = 0.5  # Learning rate
+ALPHA = 0.8  # Learning rate
 GAMMA = 0.99  # Discount factor
-EPSILON = 0.0  # Exploration rate - no decay
+EPSILON = 0.0  # Exploration rate
+#EPSILON_DECAY = 0.99
 
 
 
@@ -51,7 +52,6 @@ def mountain_height_and_derivative(x):
 
 def update_state(p, v, action, steps):
     #this calculates the height and ascent on the mountain
-    trunc_or_term = 0
     y, d = mountain_height_and_derivative(p)
 
     # action leads to increased / decreased velocity
@@ -67,7 +67,7 @@ def update_state(p, v, action, steps):
     p = p + v/5
 
     if p > WINDOW_WIDTH:
-        reward = 100
+        reward = 10000
         if VERBOSE:
             print("SUCCESS, required steps: ", steps, " resetting 01")
 
@@ -78,7 +78,7 @@ def update_state(p, v, action, steps):
 
 
     elif p <= 0:
-        reward = -1*steps
+        reward = -1*steps  #*math.log10(steps+2)
         p = 0
         v = 0
         trunc_or_term = 0
@@ -118,9 +118,6 @@ def pos_and_vel_to_state(disc_p, disc_v):
 
 
 def agent_request(p,v,steps):
-    action = 0  #the agent does nothing yet, neither does it learn anything
-    #-1 left
-    # 1 right
 
     #...
     #print("100: p ", p, " v ", v, " steps ", steps)
@@ -132,7 +129,7 @@ def agent_request(p,v,steps):
 
     if np.random.rand() < EPSILON:
     # Explore: random action
-        print("Should not be here")
+      #  print("Should not be here")
         if np.random.rand() < 0.5:
             action = -1
         else:
@@ -170,6 +167,8 @@ def agent_request(p,v,steps):
     if action == 1:
         q_table[state, 1] += ALPHA * (reward + GAMMA * best_future_q - q_table[state, 1])
 
+    ##if reward >= 100:
+    ##    print("REWARD 100 , state ", state , " action ", action , " pos ", p , " vel ", v , " disc p ", disc_p , " disc v ", disc_v, " state 0 ", q_table[state, 0], " state 1 ", q_table[state, 1])
 
     return new_p, new_v, steps, trunc_or_term
 
@@ -226,7 +225,7 @@ def main():
             running = False
 
         #draw mountain and car
-        if RENDER:
+        if RENDER and (episodes % RENDER_EVERY_NTH_EPISODE == 0):
             screen.fill(BG_COLOR)
             #draw at first the mountain
             for x in range(1024):
@@ -243,8 +242,6 @@ def main():
                     value_left = q_table[(pos_and_vel_to_state(x, y)),0]
                     value_right = q_table[(pos_and_vel_to_state(x, y)),1]
 
-#                    print(" p ", x , " v ", y , " value_left  " , value_left, " value_right ", value_right)
-
                     color_scale = 0.01
 
                     col_left = 128 + value_left*color_scale
@@ -260,11 +257,12 @@ def main():
                     if col_right > 255:
                         col_right = 255
 
-                    pygame.draw.circle(screen, (col_left, col_left, 255-col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - 5, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), 5)
-                    pygame.draw.circle(screen, (col_right, col_right, 255-col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + 5, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), 5)
+                    pygame.draw.circle(screen, (col_left, col_left, 255-col_left ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
+                    pygame.draw.circle(screen, (col_right, col_right, 255-col_right), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/8)
 
 
             pygame.display.flip()
+
         steps = steps + 1
 
     pygame.quit()
