@@ -273,9 +273,10 @@ def main():
                     red_scale = (value_left - min(value_left, value_right)) / ((max(value_left, value_right) - min(value_left, value_right)) + 10000) * 255
                     green_scale = (value_right - min(value_left, value_right)) / ((max(value_left, value_right) - min(value_left, value_right)) + 10000) * 255
 
+                    scale_factor = min(WINDOW_WIDTH, WINDOW_HEIGHT)/max(NUM_OF_POSITION_BUCKETS, NUM_OF_VELOCITY_BUCKETS)
 
-                    pygame.draw.circle(screen, (red_scale, 0, 0 ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS - WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16)
-                    pygame.draw.circle(screen, (0, green_scale, 0 ), ((x + 0.5) * WINDOW_WIDTH / NUM_OF_POSITION_BUCKETS + WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16, WINDOW_HEIGHT - (y + 0.5) * WINDOW_HEIGHT / NUM_OF_VELOCITY_BUCKETS), WINDOW_WIDTH/NUM_OF_POSITION_BUCKETS/16)
+                    pygame.draw.circle(screen, (red_scale, 0, 0 )  , ((x + 0.5) * scale_factor - scale_factor/8, WINDOW_HEIGHT - (y + 0.5) * scale_factor), scale_factor/8)
+                    pygame.draw.circle(screen, (0, green_scale, 0 ), ((x + 0.5) * scale_factor + scale_factor/8, WINDOW_HEIGHT - (y + 0.5) * scale_factor), scale_factor/8)
 
 
             pygame.display.flip()
