@@ -202,9 +202,12 @@ def agent_request(p,v,steps):
     return new_p, new_v, steps, trunc_or_term
 
 def main():
+
     pygame.init()
-    screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Daniel's Mountain Car(t)")
+    if (RENDER):
+        screen = pygame.display.set_mode(WINDOW_SIZE)
+        pygame.display.set_caption("Daniel's Mountain Car(t)")
+
     clock = pygame.time.Clock()
 
     running = True
