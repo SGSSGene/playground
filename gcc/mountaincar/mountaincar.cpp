@@ -15,7 +15,7 @@
 const int WINDOW_WIDTH = 1024;
 const double MOUNTAIN_HEIGHT = 256.0;
 const double HORIZONTAL_SCALE_FACTOR = 2*M_PI/WINDOW_WIDTH;
-const double MAX_ABS_ACCELERATION = 0.75;
+const double MAX_ABS_ACCELERATION = 0.7;
 const int MAX_STEPS_PER_EPISODE = 1000;
 const int MAX_EPISODES = 10000;
 const bool VERBOSE = true;
@@ -55,7 +55,7 @@ void update_state() {
     v = v * 0.995;
 
     //position update
-    p = p + v/5;
+    p = p + v/5 * fabs(sin(atan(d)));
 
     if (p > WINDOW_WIDTH) {
         reward = 100;
