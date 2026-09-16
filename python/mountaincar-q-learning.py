@@ -101,7 +101,7 @@ def update_state(p, v, action, steps):
         trunc_or_term = 2
 
     else:
-        reward = -1*steps
+        reward = -1
         trunc_or_term = 0
         if steps > MAX_STEPS_PER_EPISODE:
             if VERBOSE:
