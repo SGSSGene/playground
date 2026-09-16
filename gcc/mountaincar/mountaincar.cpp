@@ -17,7 +17,7 @@ const double MOUNTAIN_HEIGHT = 256.0;
 const double HORIZONTAL_SCALE_FACTOR = 2*M_PI/WINDOW_WIDTH;
 const double MAX_ABS_ACCELERATION = 0.75;
 const int MAX_STEPS_PER_EPISODE = 1000;
-const int MAX_EPISODES = 200000;
+const int MAX_EPISODES = 10000;
 const bool VERBOSE = true;
 
 
@@ -60,7 +60,7 @@ void update_state() {
     if (p > WINDOW_WIDTH) {
         reward = 100;
         if (VERBOSE) {
-            std::cout << "SUCCESS, required steps: " << steps << " resetting 01";
+            std::cout << "SUCCESS, required steps: " << steps << " resetting 01 \n";
 		}
 
         p = M_PI / HORIZONTAL_SCALE_FACTOR;  //start at center
@@ -98,11 +98,11 @@ void update_state() {
 void agent_request() {
 
     //BASELINE policy:
-    if (v >= -1) {
+    if (v >= 0) {      //if positive velocity (to the right), accelerate right
         action = 1;
     }
     else {
-        action = -1;
+        action = -1;   //if negative velocity (to the left), accelerate left
     }
     //
     //here comes the state transition model, simple physics
@@ -131,7 +131,7 @@ int main() {
 
         if (VERBOSE) {
             if (steps % 100 == 0) {
-                std::cout << "Episode: " << episodes << " Step: " << steps;
+                std::cout << "Episode: " << episodes << " Step: " << steps << "\n";
 			}
 		}
     
