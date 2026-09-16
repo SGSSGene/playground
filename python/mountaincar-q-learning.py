@@ -17,7 +17,7 @@ WINDOW_WIDTH = 1024
 WINDOW_HEIGHT = 1024
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 BG_COLOR = (30, 30, 30)# maximum width/height to scale the image to
-MAX_ABS_ACCELERATION = 0.75
+MAX_ABS_ACCELERATION = 0.7
 MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
@@ -77,7 +77,7 @@ def update_state(p, v, action, steps):
     v = v*0.995
 
     #position update
-    p = p + v/5
+    p = p + v/5 * abs(math.sin(math.atan(d)))
 
     if p > WINDOW_WIDTH:
         reward = 10000
