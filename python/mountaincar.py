@@ -18,9 +18,9 @@ MAX_ABS_ACCELERATION = 0.75
 MOUNTAIN_HEIGHT = 256
 HORIZONTAL_SCALE_FACTOR = 2*math.pi/WINDOW_WIDTH
 MAX_STEPS_PER_EPISODE = 1000
-MAX_EPISODES = 2000
-MAX_FPS = False
-RENDER = True
+MAX_EPISODES = 10000
+MAX_FPS = True
+RENDER = False
 VERBOSE = True
 
 def mountain_height_and_derivative(x):
@@ -84,10 +84,10 @@ def agent_request(p,v,steps):
     # 1 right
 
     ##BASELINE policy:
-    if v >= -1:
-            action = 1
+    if v >= 0:
+            action = 1  #if positive velocity (to the right), accelerate right
     else:
-            action = -1
+            action = -1  #if negative velocity (to the left), accelerate left
 
     ##
     #here comes the state transition model, simple physics
